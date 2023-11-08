@@ -1,0 +1,68 @@
+-- Define variables for the GUI elements
+local screenGui = game.Players.LocalPlayer.PlayerGui:WaitForChild("911_Interface")
+local displayFrame = screenGui:WaitForChild("911_Display")
+local openButton = screenGui:WaitForChild("OPEN_911")
+local closeButton = screenGui:WaitForChild("CLOSE_911")
+
+-- Initially hide the display frame
+displayFrame.Visible = false
+
+-- Function to open the display frame
+local function openDisplay()
+	displayFrame.Visible = true
+	openButton.Visible = false
+	closeButton.Visible = true
+end
+
+-- Function to close the display frame
+local function closeDisplay()
+	displayFrame.Visible = false
+	openButton.Visible = true
+	closeButton.Visible = false
+end
+
+-- Connect the functions to the open and close buttons
+openButton.MouseButton1Click:Connect(openDisplay)
+closeButton.MouseButton1Click:Connect(closeDisplay)
+
+-- LINE BREAK ---- LINE BREAK ---- LINE BREAK ---- LINE BREAK ---- LINE BREAK ---- LINE BREAK ---- LINE BREAK ---- LINE BREAK ---- LINE BREAK --   
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local remoteEvent = ReplicatedStorage:WaitForChild("SubmitCalloutEvent")
+
+-- Connect the function to the SUBMIT_CALLOUT button's click event
+local submitButton = displayFrame:WaitForChild("SUBMIT_CALLOUT")
+submitButton.MouseButton1Click:Connect(function()
+	local calloutCity = displayFrame:WaitForChild("CALLOUT_CITY").Text
+	local calloutDesc = displayFrame:WaitForChild("CALLOUT_DESC").Text
+	local calloutLocation = displayFrame:WaitForChild("CALLOUT_LOCATION").Text
+	local calloutDetails = displayFrame:WaitForChild("CALLOUT_DETAILS").Text
+	local calloutData = {
+		City = calloutCity,
+		Description = calloutDesc,
+		Location = calloutLocation,
+		Details = calloutDetails
+	}
+
+	-- Send callout data to the server using the remote event
+	remoteEvent:FireServer(calloutData)
+
+	-- Debugging prints
+	print("Submit button clicked")
+	print("Callout description:", calloutDesc)
+end)
+
+-- Debugging print
+print("911 Handler Script Loaded")
+
+-- Function to handle data received from the server
+local function receiveCalloutData(calloutData)
+	-- Process the data received from the server
+	-- Update your GUI or perform other actions with the data
+	print("Received callout data:", calloutData)
+end
+
+-- Connect the function to the RemoteEvent's OnClientEvent
+remoteEvent.OnClientEvent:Connect(receiveCalloutData)
