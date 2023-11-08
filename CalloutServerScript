@@ -1,0 +1,24 @@
+-- CalloutServerScript (ServerScriptService)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Create a RemoteEvent in ReplicatedStorage
+local remoteEvent = Instance.new("RemoteEvent")
+remoteEvent.Name = "SubmitCalloutEvent"
+remoteEvent.Parent = ReplicatedStorage
+
+-- Function to handle callout submission
+local function submitCallout(player, calloutData)
+	-- Process callout data on the server
+	-- (You can also forward it to clients if needed)
+
+	-- Debugging print to confirm that the remote event is triggered
+	print("Remote event fired on the server")
+
+	return true  -- Return a confirmation that the callout was received
+end
+
+-- Connect the function to the remote event
+remoteEvent.OnServerEvent:Connect(submitCallout)
+
+-- Debugging print to confirm that the server script is loaded
+print("Server Script Loaded")
