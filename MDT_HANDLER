@@ -1,0 +1,208 @@
+local player = game.Players.LocalPlayer
+local mdtGui = player:WaitForChild("PlayerGui"):WaitForChild("MDT")
+local mdtDisplayFrame = mdtGui:WaitForChild("MDT Display")
+local userNameLabel = mdtDisplayFrame:WaitForChild("USER_NAME")
+local serviceStatusLabel = mdtDisplayFrame:WaitForChild("SERVICE_STATUS")
+local agencyNameLabel = mdtDisplayFrame:WaitForChild("AGENCY_NAME")
+local unitLabel = mdtDisplayFrame:WaitForChild("UnitLabel")
+local setUnitTextbox = mdtDisplayFrame:WaitForChild("SET_UNIT_TBOX")
+local setUnitButton = mdtDisplayFrame:WaitForChild("SET_UNIT")
+local closeButton = mdtDisplayFrame:WaitForChild("CLOSE")
+
+-- Find the "OPEN_MDT" button under the "MDT" ScreenGui
+local openMdtButton = mdtGui:WaitForChild("OPEN_MDT")
+
+-- Set the default text color for serviceStatusLabel to black
+serviceStatusLabel.Text = "OUT OF SERVICE"  -- Default status
+serviceStatusLabel.TextColor3 = Color3.new(0, 0, 0)  -- Black color
+
+-- Create a variable to track the active button
+local activeButton = nil
+
+-- Define the statusButtons table
+local statusButtons = {
+	STATUS_OFS = "OUT OF SERVICE",
+	STATUS_BUSY = "BUSY",
+	STATUS_UNAVA = "UNAVAILABLE",
+	STATUS_AVA = "AVAILABLE",
+	STATUS_ENROUTE = "EN ROUTE",
+	STATUS_SCENE = "ON SCENE",
+	STATUS_ONSTOP = "ON STOP",
+	STATUS_PATROL = "ON PATROL",
+	STATUS_PANIC = "PANIC BUTTON ACTIVE"
+}
+
+-- Function to update the serviceStatusLabel and button text style
+local function updateStatus(statusText, button)
+	serviceStatusLabel.Text = statusText
+	-- Display unit status to console (UNIT 1-SAM-57 OUT OF SERVICE) (Will be displayed on a Dispatch UI in the future)
+	print(unitLabel.Text, statusText)
+
+	-- Reset the color of the previous active button
+	if activeButton then
+		activeButton.TextColor3 = Color3.new(0, 0, 0)  -- Reset to black
+	end
+
+	-- Set the color of the current active button
+	button.TextColor3 = Color3.new(0.5, 0.5, 0.5)  -- Gray color
+
+	activeButton = button
+
+	-- Reset the color of other buttons
+	for buttonName, _ in pairs(statusButtons) do
+		if buttonName ~= button.Name then
+			local unactiveButton = mdtDisplayFrame:WaitForChild(buttonName)
+			unactiveButton.TextColor3 = Color3.new(0, 0, 0)  -- Set to black
+		end
+	end
+
+	-- Special handling for "STATUS_PANIC"
+	if button.Name == "STATUS_PANIC" then
+		serviceStatusLabel.TextColor3 = Color3.new(1, 0, 0)  -- Set text to red
+	else
+		serviceStatusLabel.TextColor3 = Color3.new(0, 0, 0)  -- Set text to black (default)
+	end
+end
+
+-- Function to set the agency name and username in all caps
+local function setAgencyNameAndUsername()
+	local playerTeam = player.Team
+	if playerTeam then
+		local teamName = playerTeam.Name
+		local agencyAbbreviation = ""
+
+		-- Define a table to map team names to their abbreviations
+		local teamAbbreviations = {
+			["Intercept Point Police Department"] = "IPPD",
+			["Harmonia County Sheriff's Office"] = "HCSO"
+			-- Add more teams and their abbreviations as needed
+		}
+
+		-- Check if the team name exists in the mapping table
+		if teamAbbreviations[teamName] then
+			agencyAbbreviation = teamAbbreviations[teamName]
+		end
+
+		-- Set the agency name label
+		agencyNameLabel.Text = agencyAbbreviation
+
+		-- Set the username in all caps
+		userNameLabel.Text = player.Name:upper()
+	else
+		agencyNameLabel.Text = "N/A"
+		userNameLabel.Text = "N/A"
+	end
+end
+
+-- Function to set the unit number from the textbox to the UnitLabel
+local function setUnitNumber()
+	local unitNumber = setUnitTextbox.Text
+	unitLabel.Text = "UNIT " .. unitNumber
+end
+
+-- Connect the "SET_UNIT" button to setUnitNumber
+setUnitButton.MouseButton1Click:Connect(setUnitNumber)
+
+-- Function to hide the "MDT Display" frame
+local function hideMdtDisplay()
+	mdtDisplayFrame.Visible = false
+end
+
+-- Function to show the "MDT Display" frame
+local function showMdtDisplay()
+	mdtDisplayFrame.Visible = true
+end
+
+-- Connect the "CLOSE" button to hide the "MDT Display" frame
+closeButton.MouseButton1Click:Connect(hideMdtDisplay)
+
+-- Connect the "OPEN_MDT" button to show the "MDT Display" frame
+openMdtButton.MouseButton1Click:Connect(showMdtDisplay)
+
+-- Connect the buttons to the updateStatus function
+for buttonName, statusText in pairs(statusButtons) do
+	local button = mdtDisplayFrame:WaitForChild(buttonName)
+	button.MouseButton1Click:Connect(function()
+		updateStatus(statusText, button)
+	end)
+end
+
+-- Call the function to set the agency name, username, and unit number initially
+setAgencyNameAndUsername()
+
+-- Update the agency name, username, and unit number whenever the player's team changes
+player:GetPropertyChangedSignal("Team"):Connect(setAgencyNameAndUsername)
+
+-- Add a list of teams to cycle through (for testing purposes)
+local teamsToCycle = {
+	game.Teams["Intercept Point Police Department"],
+	game.Teams["Harmonia County Sheriff's Office"]
+	-- Add more teams here if needed
+}
+
+-- Find the "CYCLE_TEAM" button
+local cycleTeamButton = mdtDisplayFrame:WaitForChild("CYCLE_TEAM")
+
+-- Initialize the current team index
+local currentTeamIndex = 1
+
+-- Function to cycle through teams using the "CYCLE_TEAM" button
+local function cycleTeams()
+	currentTeamIndex = currentTeamIndex % #teamsToCycle + 1
+	local newTeam = teamsToCycle[currentTeamIndex]
+	player.Team = newTeam
+end
+
+-- Connect the "CYCLE_TEAM" button to the cycleTeams function
+cycleTeamButton.MouseButton1Click:Connect(cycleTeams)
+
+-- LINE BREAK ---- LINE BREAK ---- LINE BREAK ---- LINE BREAK ---- LINE BREAK ---- LINE BREAK ---- LINE BREAK ---- LINE BREAK ---- LINE BREAK --  
+ 
+local player = game.Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Find the "MDT Display" in StarterGui
+local starterGui = player:WaitForChild("PlayerGui")
+local mdtGui = starterGui:WaitForChild("MDT")
+
+-- Debugging print
+print("Found MDT in StarterGui")
+
+-- Find the "MDT Display" within "MDT"
+local mdtDisplay = mdtGui:WaitForChild("MDT Display")
+
+-- Debugging print
+print("Found MDT Display within MDT")
+
+-- Access the CALLOUT_DESC_RECEIVED label
+local calloutDescReceivedLabel = mdtDisplay:WaitForChild("CALLOUT_DESC_RECEIVED")
+
+-- Debugging print
+print("Found CALLOUT_DESC_RECEIVED within MDT Display")
+
+print("MDT Handler Script Loaded")
+
+-- Inside the receiveCalloutData function
+local function receiveCalloutData(calloutData)
+	print("Received Callout Data Function Called")  -- Debugging print
+
+	local calloutDescReceivedLabel = mdtDisplay:WaitForChild("CALLOUT_DESC_RECEIVED")
+
+	-- Now, update the text property of the "CALLOUT_DESC_RECEIVED" label with the description from the callout data:
+	calloutDescReceivedLabel.Text = calloutData.Description
+
+	-- Debugging print to provide information in the console:
+	print("Received Callout Data:")
+	print("Description:", calloutData.Description)
+end
+
+-- Create the remote event
+local remoteEvent = ReplicatedStorage:WaitForChild("SubmitCalloutEvent")
+
+-- Connect the function to the remote event
+print("Before connecting to the remote event")
+remoteEvent.OnClientEvent:Connect(receiveCalloutData)
+print("After connecting to the remote event")
+
+-- Debugging print
+print("MDT Handler Script Loaded")
